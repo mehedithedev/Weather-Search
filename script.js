@@ -10,7 +10,7 @@ app.use(express.static('public'))
 
 
 
-
+// Sends JS Script to the HTML file. 
 app.get('/', (req,res)=>{
     res.sendFile(__dirname+ "/index.html")   
 })
@@ -51,7 +51,7 @@ app.post('/', (req,res)=>{
             res.write(`<h2>The wind speed is: ${windSpeed} KM/H</h2>`)
 
         })
-        // console.log(weatherInfo)
+    
         
 
     })
@@ -65,6 +65,7 @@ app.post('/', (req,res)=>{
 })
 
 
+// Listens to heroku port as well as localhosr:3000
 
 const port= process.env.PORT || 3000
 app.listen(port, ()=>{
