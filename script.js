@@ -1,73 +1,44 @@
-const express= require('express')
-const bodyParser= require('body-parser')
+const express = require('express');
+const bodyParser = require('body-parser');
 const https = require('https');
-const nodemon= require('nodemon');
-// const { resolve } = require('path');
 
-const app=express()
-app.use(bodyParser.urlencoded({extended:true}))
-app.use(express.static('public'))
+const app = express();
+app.use(bodyParser.urlencoded({ extended: true }));
 
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html'); // Serve your HTML file
+});
 
+app.post('/', (req, res) => {
+    const nameofCity = req.body.cityName;
+    const url = 'https://api.openweathermap.org/data/2.5/weather?q=' + nameofCity + '&appid=091407001ef812a094e745e66dde647b&units=metric';
 
-// Sends JS Script to the HTML file. 
-app.get('/', (req,res)=>{
-    res.sendFile(__dirname+ "/index.html")   
-})
+    https.get(url, (response) => {
+        console.log(response.statusCode);
 
+        response.on('data', (data) => {
+            const weatherInfo = JSON.parse(data);
+            const temperature = weatherInfo.main.temp;
+            const weatherDescription = weatherInfo.weather[0].description;
+            const feelsLike = weatherInfo.main.feels_like;
+            const icon = weatherInfo.weather[0].icon;
 
-// Post from the HTML
-app.post('/', (req,res)=>{
-    console.log('The server request is been accepted') 
-    const nameofCity= req.body.cityName   
-    // console.log(userCity)
-// Here is the code to retrive weather information from the OpenWeather API: 
-// Fetching data from Open Weather API: 
-    // Sorting up variables for particular city names: 
-    const url='https://api.openweathermap.org/data/2.5/weather?q='+nameofCity+'&appid=091407001ef812a094e745e66dde647b&units=metric'
-    https.get(url, (response)=>{
-        console.log(response.statusCode)
-        response.on('data', (data)=>{
-            // Fetch data from Open Weather Api:
-            const weatherInfo=JSON.parse(data)
-            const temperature= weatherInfo.main.temp
-            const weatherDescription=weatherInfo.weather[0].description
-            const feelsLike= weatherInfo.main.feels_like
-            const icon= weatherInfo.weather[0].icon
-            const iconURL= "http://openweathermap.org/img/wn/"+icon+"@2x.png"
-            const humidity=weatherInfo.main.humidity
-            const windSpeed=weatherInfo.wind.speed
-            const visibility=weatherInfo.visibility
-            
+            const htmlResponse = `
+                <h1>The current temperature in ${nameofCity} is ${temperature} degree Celsius</h1>
+                <h2>The weather condition is: ${weatherDescription}</h2>
+                <img src="http://openweathermap.org/img/wn/${icon}@2x.png" alt="Weather Icon">
+                <h2>It feels like ${feelsLike} degree Celsius here in ${nameofCity}</h2>
+                <h2>Visibility is: ${weatherInfo.visibility}</h2>
+                <h2>The humidity is: ${weatherInfo.main.humidity}%</h2>
+                <h2>The wind speed is: ${weatherInfo.wind.speed} KM/H</h2>
+            `;
 
+            res.setHeader('Content-Type', 'text/html');
+            res.send(htmlResponse);
+        });
+    });
+});
 
-            // Outputs the data into the web app
-            res.write('<h1> The current temperature in '+nameofCity +' is '+ temperature +' degree celsius</h1>')
-            res.write('<h2> The weather condition is: '+ weatherDescription +'</h2>')
-            res.write('<img src='+iconURL+'>')
-            res.write(`<h2>It feels like ${feelsLike} degree cesius here in ${nameofCity}</h2>`)
-            res.write(`<h2>Visibilit is: ${visibility}</h2>`)
-            res.write(`<h2>The humidity is: ${humidity}%</h2>`)
-            res.write(`<h2>The wind speed is: ${windSpeed} KM/H</h2>`)
-
-        })
-    
-        
-
-    })
-
-
-
-
-
-
-
-})
-
-
-// Listens to heroku port as well as localhosr:3000
-
-const port= process.env.PORT || 3000
-app.listen(port, ()=>{
-    console.log(`The port is been started on : ${port}`)
-})
+app.listen(3000, () => {
+    console.log('Server is running on port 3000');
+});
